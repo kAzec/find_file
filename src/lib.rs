@@ -5,7 +5,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 /// The search struct
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Search {
 	path: String,
 	depth: u8,
@@ -48,9 +48,22 @@ impl Search {
 	}
 
 	///Search in current directory
-	pub fn cwd() -> Search {
+	pub fn cwd(backward: u8) -> Search {
 		let cwd = ::std::env::current_dir().unwrap();
-		let string = cwd.as_path().to_str().unwrap();
+		let mut cwd_path = cwd.as_path();
+		for _i in 0..backward {
+			match cwd_path.parent() {
+				None => {
+					break;
+				},
+				Some(parent_path) => {
+					cwd_path = parent_path;
+				}
+			}
+		}
+		let string = cwd_path.to_str().unwrap();
+
+		println!("Search dir: {}", string);
 
 		Search { path: string.to_string(), depth: 1 }	
 	}
@@ -69,7 +82,6 @@ impl Search {
 
 		match check_kids(self.depth, head, path) {
 			Ok(found_head) => {
-				println!("Found head {:?}", found_head);
 				let mut current_path = found_head;
 				for i in 1..dir_names.len() {
 					let result = check_dir(dir_names[i], current_path.as_path());
